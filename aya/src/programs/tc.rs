@@ -8,7 +8,7 @@ use std::{
 
 use aya_obj::generated::{
     TC_H_CLSACT, TC_H_MIN_EGRESS, TC_H_MIN_INGRESS,
-    bpf_attach_type::{self, BPF_TCX_EGRESS, BPF_TCX_INGRESS},
+    bpf_attach_type::{self, BPF_NETKIT_PEER, BPF_NETKIT_PRIMARY, BPF_TCX_EGRESS, BPF_TCX_INGRESS},
     bpf_link_type,
     bpf_prog_type::BPF_PROG_TYPE_SCHED_CLS,
 };
@@ -33,6 +33,10 @@ use crate::{
 /// Traffic control attach type.
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum TcAttachType {
+    /// Attach to netkit primary.
+    NetkitPrimary,
+    /// Attach to netkit peer.
+    NetkitPeer,
     /// Attach to ingress.
     Ingress,
     /// Attach to egress.
@@ -118,11 +122,15 @@ impl TcAttachType {
             Self::Custom(parent) => *parent,
             Self::Ingress => tc_handler_make(TC_H_CLSACT, TC_H_MIN_INGRESS),
             Self::Egress => tc_handler_make(TC_H_CLSACT, TC_H_MIN_EGRESS),
+            Self::NetkitPrimary => todo!(),
+            Self::NetkitPeer => todo!(),
         }
     }
 
     pub(crate) fn tcx_attach_type(&self) -> Result<bpf_attach_type, TcError> {
         match self {
+            Self::NetkitPrimary => Ok(BPF_NETKIT_PRIMARY),
+            Self::NetkitPeer => Ok(BPF_NETKIT_PEER),
             Self::Ingress => Ok(BPF_TCX_INGRESS),
             Self::Egress => Ok(BPF_TCX_EGRESS),
             Self::Custom(tcx_attach_type) => Err(TcError::InvalidTcxAttach(*tcx_attach_type)),
